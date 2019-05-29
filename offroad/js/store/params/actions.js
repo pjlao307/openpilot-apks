@@ -27,6 +27,7 @@ const PARAMS = [
   "SpeedLimitOffset",
   "TrainingVersion",
   "Version",
+  "CommunityPilotConfig",
 ];
 
 export function refreshParams() {

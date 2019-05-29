@@ -353,6 +353,13 @@ class Settings extends Component {
                         <X.Button
                             size='small'
                             color='settingsDefault'
+                            onPress={ () => this.props.openCommunityForks() }>
+                            CommunityPilot Forks
+                        </X.Button>
+                        <X.Line color='transparent' size='tiny' spacing='mini' />
+                        <X.Button
+                            size='small'
+                            color='settingsDefault'
                             onPress={ () => this.props.reboot() }>
                             Reboot
                         </X.Button>
@@ -669,6 +676,15 @@ const mapDispatchToProps = dispatch => ({
             key: null,
             actions: [
                 NavigationActions.navigate({ routeName: 'Onboarding' })
+            ]
+        }))
+    },
+    openCommunityForks: () => {
+        dispatch(NavigationActions.reset({
+            index: 0,
+            key: null,
+            actions: [
+                NavigationActions.navigate({ routeName: 'CommunityForks' })
             ]
         }))
     },

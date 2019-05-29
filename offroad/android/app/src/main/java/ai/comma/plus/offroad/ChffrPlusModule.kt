@@ -21,7 +21,8 @@ import android.net.wifi.WifiInfo
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 /**
  * Created by batman on 11/2/17.
@@ -237,6 +238,16 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun showAndroidSettings() {
+        try {
+            Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "am start -n com.android.settings/.Settings"))
+        } catch (e: IOException) {
+            CloudLog.exception("BaseUIReactModule.androidSettings", e)
+        }
+
+    }
+
+    @ReactMethod
     fun shutdown() {
         try {
             Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "service call power 17 i32 0 i32 1"))
@@ -349,6 +360,15 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                     .emit(SIM_STATE_EVENT_NAME, cellState)
         }
+    }
+
+    @ReactMethod
+    fun loadCommunityPilotRepo(user: String) {
+      try {
+         Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+          "sh /data/openpilot/scripts/loadCommunityPilotRepo.sh switch ${user} >> /data/cp.log"))
+       } catch (e: IOException) {
+       }
     }
 
     internal inner class NetworkMonitor : BroadcastReceiver() {
