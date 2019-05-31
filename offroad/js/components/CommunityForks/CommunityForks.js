@@ -230,6 +230,7 @@ class CommunityForks extends Component {
       }
 
       const Bold = (props) => <X.Text color='white' weight='bold'>{props.children}</X.Text>
+      const Blue = (props) => <X.Text color='#1ab6ff' weight='bold'>{props.children}</X.Text>
 
       return (
          <X.Gradient color='dark_blue'>
@@ -253,24 +254,46 @@ class CommunityForks extends Component {
                 <X.Text
                   color='white' weight='light'
                   style={ Styles.communityForkContext }>
-                  You can load any fork that you've added below.
-                  Simply click on the fork
-                  you would like to view details on and tap "Load this fork".  Your
-                  EON will clone that fork if it hasn't already and configure that
-                  fork then reboot.  If the fork has already been cloned
-                  it will switch to that fork and reboot.
+                  <Bold>Step 1:</Bold> Make sure you've cloned the fork you'd like to manage from this list onto your EON via SSH.
+                    Name the directory for the clone in the format "openpilot.[username]".  For example, to clone comma.ai's
+                    official repository so that you can switch to it from this GUI you would use the following SSH command:
+                    <Blue>'git clone https://github.com/commaai/openpilot.git /data/openpilot.commaai'</Blue>
+                </X.Text>
+                <X.Text
+                  color='white' weight='light'
+                  style={ Styles.communityForkContext }>
+                  <Bold>Step 2:</Bold> Tap the "Add Repository" button and add the repo information to manage.
+                  Make sure you spell <Bold>everything correctly</Bold>.  Any typos will cause this to not work.
+                  The branch name you specify when you added the repository will automatically be checked out
+                  when you switch to that fork.
+                </X.Text>
+                <X.Text
+                  color='white' weight='light'
+                  style={ Styles.communityForkContext }>
+                  <Bold>Step 3:</Bold> Tap the repository you'd like to switch to.
+                </X.Text>
+                <X.Text
+                  color='white' weight='light'
+                  style={ Styles.communityForkContext }>
+                  <Bold>Step 4:</Bold> Tap "Load this repo" button to switch to that fork.
+                </X.Text>
+                <X.Text
+                  color='white' weight='light'
+                  style={ Styles.communityForkContext }>
+                  Your EON will automatically reboot into the fork and branch you selected.
                 </X.Text>
 
+                <View style={Styles.addRepoBtnView}>
+                  <X.Button
+                      size='small'
+                      color='setupPrimary'
+                      style={Styles.Btn200}
+                      onPress={ () => this.setState({route: ForkRoutes.ADD_REPO_MODAL}) }>
+                      Add Repository
+                  </X.Button>
+                </View>
+
                 <X.Table color='darkBlue'>
-                  <View style={Styles.addRepoBtnView}>
-                    <X.Button
-                        size='small'
-                        color='setupPrimary'
-                        style={Styles.Btn200}
-                        onPress={ () => this.setState({route: ForkRoutes.ADD_REPO_MODAL}) }>
-                        Add Repository
-                    </X.Button>
-                  </View>
                   {contents}
                 </X.Table>
               </ScrollView>
@@ -312,7 +335,7 @@ const mapDispatchToProps = dispatch => ({
     },
     loadRepo: (username,reponame,branch) => {
       ChffrPlus.loadCommunityPilotRepo(username,reponame,branch);
-      Alert.alert('Switching Repo', 'If the repository needs to be cloned DO NOT shut off the EON.  Your EON will reboot automatically after cloning has finished.', [
+      Alert.alert('Switching Repo', ' Your EON will reboot automatically.', [
       ]);
     },
 });

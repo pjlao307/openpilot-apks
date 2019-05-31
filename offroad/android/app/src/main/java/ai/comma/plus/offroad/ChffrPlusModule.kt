@@ -364,7 +364,7 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     fun loadCommunityPilotRepo(user: String, repo: String, branch: String) {
       try {
          Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
-          "sh /data/openpilot/scripts/loadCommunityPilotRepo.sh switch ${user} ${repo} {$branch} >> /data/cp.log"))
+          "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${repo} ${branch} >> /data/communitypilot_scripts/cp.log"))
        } catch (e: IOException) {
        }
     }

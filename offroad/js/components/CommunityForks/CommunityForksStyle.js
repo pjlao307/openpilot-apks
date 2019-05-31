@@ -62,4 +62,13 @@ export default StyleSheet.create({
     width: 200,
     marginTop: 5,
   },
+  communityForkContext: {
+    paddingBottom: 15,
+  },
+  versionText: {
+    paddingBottom: 15,
+    size:10,
+    justifyContent: 'right',
+    alignItems: 'right',
+  },
 })
