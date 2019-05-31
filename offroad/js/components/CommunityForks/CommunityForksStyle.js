@@ -39,4 +39,27 @@ export default StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 20,
   },
+  textInput: {
+    width: 200,
+    color: '#000000',
+    size: 30,
+    borderWidth: 1,
+    paddingLeft:5,
+    paddingRight: 5,
+    margin: 5,
+    marginLeft: 15,
+    height: 40,
+    borderColor: '#5ddfff',
+    backgroundColor: "#dddddd",
+    borderRadius: 10,
+  },
+  addRepoBtnView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  Btn200: {
+    width: 200,
+    marginTop: 5,
+  },
 })

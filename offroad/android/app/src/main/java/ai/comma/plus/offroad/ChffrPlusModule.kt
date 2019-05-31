@@ -21,8 +21,6 @@ import android.net.wifi.WifiInfo
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 /**
  * Created by batman on 11/2/17.
@@ -363,10 +361,10 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun loadCommunityPilotRepo(user: String) {
+    fun loadCommunityPilotRepo(user: String, repo: String, branch: String) {
       try {
          Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
-          "sh /data/openpilot/scripts/loadCommunityPilotRepo.sh switch ${user} >> /data/cp.log"))
+          "sh /data/openpilot/scripts/loadCommunityPilotRepo.sh switch ${user} ${repo} {$branch} >> /data/cp.log"))
        } catch (e: IOException) {
        }
     }
