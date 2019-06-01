@@ -363,10 +363,21 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     @ReactMethod
     fun loadCommunityPilotRepo(user: String, repo: String, branch: String) {
       try {
-         Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+         var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
           "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${repo} ${branch} >> /data/communitypilot_scripts/cp.log"))
+
        } catch (e: IOException) {
        }
+    }
+
+    @ReactMethod
+    fun updateCommunityPilotAPK(apk_url: String) {
+       try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh update ${apk_url} >> /data/communitypilot_scripts/cp.log"))
+          proc.waitFor()
+        } catch (e: IOException) {
+        }
     }
 
     internal inner class NetworkMonitor : BroadcastReceiver() {

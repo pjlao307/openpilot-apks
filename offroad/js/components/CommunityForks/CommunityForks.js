@@ -20,11 +20,7 @@ import X from '../../themes';
 import Styles from './CommunityForksStyle';
 import { Params } from '../../config';
 
-import {
-    loadCommunityPilotRepo,
-} from '../../store/params/actions';
-
-import { loadCommunityPilotConfig } from '../../utils/version';
+const DEBUG = false;
 
 const ForkRoutes = {
     PRIMARY: 'PRIMARY',
@@ -42,7 +38,11 @@ class CommunityForks extends Component {
 
         this.state = {
           repos: [],
-          checkRepoResponse: null,
+          config: {},
+          updateAvailable: false,
+          jsonLoaded: false,
+          isLoading: false,
+          newHash: '',
           route: ForkRoutes.PRIMARY,
         }
     }
@@ -52,9 +52,40 @@ class CommunityForks extends Component {
         //this.setState({status: "loaded1: "+cached.toString()})
         let config = JSON.parse(cached) || [];
         this.setState({
-          repos: config,
+          repos: config.repos,
+          isLoading: true,
+          config: config,
           status: "loaded2: "+config.toString()
         })
+
+        // Check to see if there's an update to the apk
+        config_url = config.config_url;
+
+        fetch(config_url)
+          .then((response) => response.json())
+          .then((responseJson) => {
+            updateAvailable = true;
+            if (config.apk_hash === responseJson.apk_hash) {
+              updateAvailable = false;
+            }
+            this.setState({
+              isLoading: false,
+              jsonLoaded: true,
+              newHash: responseJson.apk_hash,
+              updateAvailable: updateAvailable,
+              status: 'json loaded: '+updateAvailable
+            });
+
+             // Cache this data to storage
+            //ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(responseJson));
+          })
+          .catch((error) => {
+            this.setState({
+              isLoading: false,
+              jsonLoaded: false,
+              status: 'No connection'
+            })
+          });
     }
 
     handleNavigatedFromMenu(name, user, branch, route) {
@@ -69,20 +100,23 @@ class CommunityForks extends Component {
     }
 
     addRepo() {
+      const {config, repos} = this.state;
       const newRepo = {name: this.state.name,user: this.state.user,branch: this.state.branch};
 
       try {
-        this.setState({repos: [...this.state.repos, newRepo], route: ForkRoutes.PRIMARY});
-        ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify([...this.state.repos, newRepo]));
+        newRepos = [...repos, newRepo];
+        newConfig = config;
+        newConfig.repos = newRepos;
+        this.setState({repos: newRepos, route: ForkRoutes.PRIMARY});
+        ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(newConfig));
       }
       catch (error) {
-        this.setState({repos: [newRepo], route: ForkRoutes.PRIMARY});
-        //this.setState({status: "repo undefined: "+JSON.stringify([newRepo])});
+        //this.setState({repos: [newRepo], route: ForkRoutes.PRIMARY});
       }
     }
 
     deleteRepo() {
-      const {selectedRepo, repos} = this.state;
+      const {selectedRepo, config, repos} = this.state;
 
       let newList = repos.filter(item =>
           item.name != selectedRepo.name ||
@@ -90,8 +124,20 @@ class CommunityForks extends Component {
           item.branch != selectedRepo.branch
       );
 
-      ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(newList));
+      newConfig = config;
+      newConfig.repos = newList;
+
+      ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(newConfig));
       this.setState({repos: newList, route: ForkRoutes.PRIMARY});
+    }
+
+    doUpdate(config, newHash) {
+      config.apk_hash = newHash;
+      ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(config));
+      this.setState({status: "Updating APK: "+JSON.stringify(config.apk_url)})
+      Alert.alert('Updating APK', 'Downloading update... please wait.\nYour EON will reboot once download has completed.', [
+      ]);
+      this.props.doUpdate(this.state.config.apk_url);
     }
 
     renderAddRepo() {
@@ -208,8 +254,47 @@ class CommunityForks extends Component {
       );
     }
 
+    renderUpdateBtn() {
+      if (this.state.updateAvailable) {
+        return (
+            <X.Button
+               size='small'
+               color='updateAvailable'
+               style={Styles.updateBtnView}
+               onPress={ () => this.doUpdate(this.state.config, this.state.newHash) }>
+               Update Available
+             </X.Button>
+        )
+      }
+
+      return
+    }
+
     renderPrimaryScreen() {
-      const { status, repos } = this.state;
+      const { isLoading, status, repos } = this.state;
+
+      if (isLoading) {
+        return (
+          <ActivityIndicator size="large" color="#0000ff" animating={isLoading} />
+        );
+      }
+
+      let debug = (
+        <X.Text
+          color='white' weight='light'
+          style={ Styles.communityForkContext }>
+        </X.Text>
+      )
+
+      if (DEBUG) {
+        debug = (
+          <X.Text
+            color='white' weight='light'
+            style={ Styles.communityForkContext }>
+            Debug: {status}
+          </X.Text>
+        )
+      }
 
       try {
         contents = repos.map((item) =>{
@@ -218,6 +303,7 @@ class CommunityForks extends Component {
               <X.Button
                   size='small'
                   color='settingsDefault'
+                  style={Styles.updateBtn}
                   onPress={ () => this.handleNavigatedFromMenu(item.name, item.user, item.branch, ForkRoutes.FORKDETAILS) }>
                   {item.user+" "+item.name+" ("+item.branch+")"}
               </X.Button>
@@ -226,11 +312,18 @@ class CommunityForks extends Component {
           )
         });
       } catch (error) {
-        this.setStatus({status: "render error: "+error.toString()})
+        this.setStatus({status: "repos.map error: "+error.toString()})
       }
 
+      try {
+        updateBtn = this.renderUpdateBtn()
+      }
+      catch (error) {
+        this.setStatus({status: "updateBtn error: "+error.toString()})
+      }
+
+
       const Bold = (props) => <X.Text color='white' weight='bold'>{props.children}</X.Text>
-      const Blue = (props) => <X.Text color='#1ab6ff' weight='bold'>{props.children}</X.Text>
 
       return (
          <X.Gradient color='dark_blue'>
@@ -257,7 +350,7 @@ class CommunityForks extends Component {
                   <Bold>Step 1:</Bold> Make sure you've cloned the fork you'd like to manage from this list onto your EON via SSH.
                     Name the directory for the clone in the format "openpilot.[username]".  For example, to clone comma.ai's
                     official repository so that you can switch to it from this GUI you would use the following SSH command:
-                    <Blue>'git clone https://github.com/commaai/openpilot.git /data/openpilot.commaai'</Blue>
+                    'git clone https://github.com/commaai/openpilot.git /data/openpilot.commaai'
                 </X.Text>
                 <X.Text
                   color='white' weight='light'
@@ -284,6 +377,8 @@ class CommunityForks extends Component {
                 </X.Text>
 
                 <View style={Styles.addRepoBtnView}>
+                  {updateBtn}
+
                   <X.Button
                       size='small'
                       color='setupPrimary'
@@ -291,11 +386,15 @@ class CommunityForks extends Component {
                       onPress={ () => this.setState({route: ForkRoutes.ADD_REPO_MODAL}) }>
                       Add Repository
                   </X.Button>
+
                 </View>
 
                 <X.Table color='darkBlue'>
                   {contents}
                 </X.Table>
+
+                {debug}
+
               </ScrollView>
             </View>
         </X.Gradient>
@@ -324,9 +423,6 @@ class CommunityForks extends Component {
 }
 
 const mapStateToProps = state => ({
-    simState: state.host.simState,
-    wifiState: state.host.wifiState,
-    checkRepoResponse: state.host.checkRepoResponse,
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -337,6 +433,9 @@ const mapDispatchToProps = dispatch => ({
       ChffrPlus.loadCommunityPilotRepo(username,reponame,branch);
       Alert.alert('Switching Repo', ' Your EON will reboot automatically.', [
       ]);
+    },
+    doUpdate: (apk_url) => {
+      ChffrPlus.updateCommunityPilotAPK(apk_url);
     },
 });
 

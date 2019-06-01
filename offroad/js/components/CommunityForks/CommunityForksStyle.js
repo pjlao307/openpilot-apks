@@ -71,4 +71,9 @@ export default StyleSheet.create({
     justifyContent: 'right',
     alignItems: 'right',
   },
+  updateBtnView: {
+    width: 200,
+    paddingTop: 5,
+    marginTop: 10,
+  },
 })
