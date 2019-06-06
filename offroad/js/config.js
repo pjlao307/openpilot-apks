@@ -25,4 +25,6 @@ export const Params = {
     KEY_SPEED_LIMIT_OFFSET: 'SpeedLimitOffset',
     KEY_LIVE_PARAMETERS: 'LiveParameters',
     KEY_COMMUNITYPILOT_CONFIG: 'CommunityPilotConfig',
+    KEY_APK_LOADED: 'APKLoaded',
+    KEY_LAST_BOOTED_REPO: 'LastBootedRepo',
 };

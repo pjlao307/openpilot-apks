@@ -49,13 +49,14 @@ class CommunityForks extends Component {
 
     async componentDidMount() {
         cached = await ChffrPlus.readParam(Params.KEY_COMMUNITYPILOT_CONFIG);
+
         //this.setState({status: "loaded1: "+cached.toString()})
         let config = JSON.parse(cached) || [];
         this.setState({
           repos: config.repos,
           isLoading: true,
           config: config,
-          status: "loaded2: "+config.toString()
+          status: "loaded2: "+cached
         })
 
         // Check to see if there's an update to the apk
@@ -73,7 +74,6 @@ class CommunityForks extends Component {
               jsonLoaded: true,
               newHash: responseJson.apk_hash,
               updateAvailable: updateAvailable,
-              status: 'json loaded: '+updateAvailable
             });
 
              // Cache this data to storage

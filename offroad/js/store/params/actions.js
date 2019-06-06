@@ -28,6 +28,8 @@ const PARAMS = [
   "TrainingVersion",
   "Version",
   "CommunityPilotConfig",
+  "APKLoaded",
+  "LastBootedRepo",
 ];
 
 export function refreshParams() {

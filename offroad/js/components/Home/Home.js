@@ -21,10 +21,22 @@ import X from '../../themes';
 import Styles from './HomeStyles';
 import PrimaryButton from '../PrimaryButton';
 
+import { Params } from '../../config';
+
 class Home extends Component {
     static navigationOptions = {
       header: null,
     };
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+          status: '',
+          lastrepo: '',
+          hideStatus: true,
+        }
+    }
 
     handlePressedStartDrive = () => {
         this.props.onNewDrivePressed();
@@ -33,6 +45,18 @@ class Home extends Component {
     handlePressedSettings = () => {
         ChffrPlus.sendBroadcast("ai.comma.plus.offroad.NAVIGATED_TO_SETTINGS");
         this.props.openSettings();
+    }
+
+    async componentDidMount() {
+      lastloaded = await ChffrPlus.readParam(Params.KEY_APK_LOADED);
+      ChffrPlus.writeParam(Params.KEY_APK_LOADED,'1');
+      lastrepo = await ChffrPlus.getCurrentSymLink();
+      ChffrPlus.writeParam(Params.KEY_LAST_BOOTED_REPO,lastrepo);
+      if (lastloaded.toString().trim() === '0') {
+        status = 'NOTE: Boot failed, using last successful repository: '+lastrepo
+        this.setState({status: status, hideStatus: false})
+      }
+      this.setState({lastrepo: lastrepo})
     }
 
     renderNewDestination() {
@@ -139,6 +163,28 @@ class Home extends Component {
         }
     }
 
+    renderLoadStatus() {
+      const { status, hideStatus } = this.state;
+      if (!hideStatus) {
+        setTimeout(() => {
+            this.setState({hideStatus: true})
+        },5000)
+        return (
+          <View style={ Styles.homeActionsPrimaryButtonBody }>
+            <X.Text
+                color='white'
+                weight='semibold'>
+                { status }
+            </X.Text>
+          </View>
+        )
+      }
+      else {
+        return null
+      }
+      return null
+    }
+
     render() {
         const {
             isPaired,
@@ -171,6 +217,7 @@ class Home extends Component {
                             </View>
                             { this.renderUploadStatus() }
                         </View>
+                        { this.renderLoadStatus() }
                     </View>
                     <View style={ Styles.homeActions }>
                         <View style={ Styles.homeActionsPrimary }>

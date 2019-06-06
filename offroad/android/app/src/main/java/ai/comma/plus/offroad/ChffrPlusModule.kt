@@ -21,6 +21,9 @@ import android.net.wifi.WifiInfo
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.File
 
 /**
  * Created by batman on 11/2/17.
@@ -363,9 +366,8 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     @ReactMethod
     fun loadCommunityPilotRepo(user: String, repo: String, branch: String) {
       try {
-         var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+         Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
           "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${repo} ${branch} >> /data/communitypilot_scripts/cp.log"))
-
        } catch (e: IOException) {
        }
     }
@@ -378,6 +380,24 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
           proc.waitFor()
         } catch (e: IOException) {
         }
+    }
+
+    fun getCurrentSymLinkCmd(): String? {
+        try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh currentrepo"))
+          proc.waitFor()
+          var reader = BufferedReader(InputStreamReader(proc.getInputStream()))
+          var line = reader.readLine()
+          return line.toString()
+        } catch(e: Exception) {
+            return null
+        }
+    }
+
+    @ReactMethod
+    fun getCurrentSymLink(promise: Promise) {
+        promise.resolve(getCurrentSymLinkCmd())
     }
 
     internal inner class NetworkMonitor : BroadcastReceiver() {
