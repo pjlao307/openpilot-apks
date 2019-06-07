@@ -175,7 +175,7 @@ class CommunityForks extends Component {
                  style={Styles.textInput}
                  placeholder="Branch"
                  placeholderTextColor="#444444"
-                 maxLength={30}
+                 maxLength={60}
                  onChangeText={(branch) => this.setState({branch})}
                  underlineColorAndroid="transparent"
                  />
