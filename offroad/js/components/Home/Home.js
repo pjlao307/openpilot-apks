@@ -34,6 +34,7 @@ class Home extends Component {
         this.state = {
           status: '',
           lastrepo: '',
+          lastloaded: '0',
           hideStatus: true,
         }
     }
@@ -49,10 +50,11 @@ class Home extends Component {
 
     async componentDidMount() {
       lastloaded = await ChffrPlus.readParam(Params.KEY_APK_LOADED);
+      reverted = await ChffrPlus.readParam(Params.KEY_APK_REVERTED);
       ChffrPlus.writeParam(Params.KEY_APK_LOADED,'1');
       lastrepo = await ChffrPlus.getCurrentSymLink();
       ChffrPlus.writeParam(Params.KEY_LAST_BOOTED_REPO,lastrepo);
-      if (lastloaded.toString().trim() === '0') {
+      if (reverted.toString().trim() === '1') {
         status = 'NOTE: Boot failed, using last successful repository: '+lastrepo
         this.setState({status: status, hideStatus: false})
       }

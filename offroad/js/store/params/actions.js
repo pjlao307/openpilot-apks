@@ -29,6 +29,7 @@ const PARAMS = [
   "Version",
   "CommunityPilotConfig",
   "APKLoaded",
+  "APKReverted",
   "LastBootedRepo",
 ];
 

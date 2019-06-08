@@ -373,10 +373,10 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun updateCommunityPilotAPK(apk_url: String) {
+    fun updateCommunityPilotAPK() {
        try {
           var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
-            "sh /data/communitypilot_scripts/switchRepo.sh update ${apk_url} >> /data/communitypilot_scripts/cp.log"))
+            "sh /data/communitypilot_scripts/switchRepo.sh update >> /data/communitypilot_scripts/cp.log"))
           proc.waitFor()
         } catch (e: IOException) {
         }

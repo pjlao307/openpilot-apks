@@ -26,5 +26,6 @@ export const Params = {
     KEY_LIVE_PARAMETERS: 'LiveParameters',
     KEY_COMMUNITYPILOT_CONFIG: 'CommunityPilotConfig',
     KEY_APK_LOADED: 'APKLoaded',
+    KEY_APK_REVERTED: 'APKReverted',
     KEY_LAST_BOOTED_REPO: 'LastBootedRepo',
 };

@@ -137,7 +137,7 @@ class CommunityForks extends Component {
       this.setState({status: "Updating APK: "+JSON.stringify(config.apk_url)})
       Alert.alert('Updating APK', 'Downloading update... please wait.\nYour EON will reboot once download has completed.', [
       ]);
-      this.props.doUpdate(this.state.config.apk_url);
+      this.props.doUpdate();
     }
 
     renderAddRepo() {
@@ -434,8 +434,8 @@ const mapDispatchToProps = dispatch => ({
       Alert.alert('Switching Repo', ' Your EON will reboot automatically.', [
       ]);
     },
-    doUpdate: (apk_url) => {
-      ChffrPlus.updateCommunityPilotAPK(apk_url);
+    doUpdate: () => {
+      ChffrPlus.updateCommunityPilotAPK();
     },
 });
 
