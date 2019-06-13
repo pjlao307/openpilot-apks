@@ -28,4 +28,5 @@ export const Params = {
     KEY_APK_LOADED: 'APKLoaded',
     KEY_APK_REVERTED: 'APKReverted',
     KEY_LAST_BOOTED_REPO: 'LastBootedRepo',
+    KEY_COMMUNITYPILOT_USER: 'CommunityPilotUser',
 };

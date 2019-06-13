@@ -32,6 +32,7 @@ const PARAMS = [
   "APKLoaded",
   "APKReverted",
   "LastBootedRepo",
+  "CommunityPilotUser",
 ];
 
 export function refreshParams() {
