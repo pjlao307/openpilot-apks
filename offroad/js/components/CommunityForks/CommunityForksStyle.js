@@ -65,15 +65,36 @@ export default StyleSheet.create({
   communityForkContext: {
     paddingBottom: 15,
   },
-  versionText: {
-    paddingBottom: 15,
-    size:10,
-    justifyContent: 'right',
-    alignItems: 'right',
-  },
   updateBtnView: {
     width: 200,
     paddingTop: 5,
     marginTop: 10,
+  },
+  modalStyle: {
+    marginTop: 30,
+    marginLeft: 30,
+  },
+  pulldownStyle: {
+    color: '#000000',
+    flex: 1,
+  },
+  pulldownView: {
+    backgroundColor: '#ffffff',
+    borderColor:'#5ddfff',
+    borderRadius: 20,
+    borderWidth: 2,
+    paddingTop: 0,
+    paddingLeft: 0,
+    paddingBottom: 0,
+  },
+  versionView: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingRight: 10,
+  },
+  topView: {
+    flex: 1,
+    flexDirection: 'row',
   },
 })

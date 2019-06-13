@@ -364,10 +364,10 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun loadCommunityPilotRepo(user: String, repo: String, branch: String) {
+    fun loadCommunityPilotRepo(user: String, branch: String) {
       try {
          Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
-          "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${repo} ${branch} >> /data/communitypilot_scripts/cp.log"))
+          "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${branch} >> /data/communitypilot_scripts/cp.log"))
        } catch (e: IOException) {
        }
     }
@@ -380,6 +380,33 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
           proc.waitFor()
         } catch (e: IOException) {
         }
+    }
+
+    fun callCommunityPilotScriptCmd(cmd: String, username: String): String? {
+       try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh ${cmd} ${username}"))
+          //proc.waitFor()
+          var reader = BufferedReader(InputStreamReader(proc.getInputStream()))
+          var line = reader.readLine()
+          var response = ArrayList<String>()
+          response.add("\""+line+"\"")
+          while (line != null) {
+            line = reader.readLine()
+            if (line != null) {
+              response.add("\""+line+"\"")
+            }
+          }
+          reader.close()
+          return response.toString()
+        } catch (e: IOException) {
+          return e.toString()
+        }
+    }
+
+    @ReactMethod
+    fun callCommunityPilotScript(cmd: String, username: String, promise: Promise) {
+        promise.resolve(callCommunityPilotScriptCmd(cmd, username))
     }
 
     fun getCurrentSymLinkCmd(): String? {

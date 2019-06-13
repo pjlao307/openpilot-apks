@@ -51,7 +51,12 @@ export let ChffrPlusTheme = {
                 borderRadius: 13,
             },
             updateAvailable: {
-                backgroundColor: '#265e99',
+                backgroundColor: '#38b535',
+                borderColor: Colors.blue100,
+                borderRadius: 13,
+            },
+            deleteRepo: {
+                backgroundColor: '#de3535',
                 borderColor: Colors.blue100,
                 borderRadius: 13,
             },
