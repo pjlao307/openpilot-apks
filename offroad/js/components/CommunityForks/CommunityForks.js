@@ -9,6 +9,8 @@ import {
   List,
   ActivityIndicator,
   TextInput,
+  Modal,
+  Picker,
 } from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
@@ -20,6 +22,7 @@ import X from '../../themes';
 import Styles from './CommunityForksStyle';
 import { Params } from '../../config';
 
+const VERSION = 'v0.1.0';
 const DEBUG = false;
 
 const ForkRoutes = {
@@ -42,27 +45,69 @@ class CommunityForks extends Component {
           updateAvailable: false,
           jsonLoaded: false,
           isLoading: false,
+          status: '',
           newHash: '',
           route: ForkRoutes.PRIMARY,
+          hasUpdate: '0',
+          repoUpdated: false,
+          updateRepoModalVisible: false,
+          branches: [],
+          selectedBranch: '',
+          repoBranches: '',
         }
+    }
+
+    async getRepoBranch(user) {
+      branch = await ChffrPlus.callCommunityPilotScript('repobranch',user);
+      jsonBranch = JSON.parse(branch)
+      //thisRepo = JSON.parse('{"'+user+'": "'+jsonBranch[0]+'"}')
+      //newList = [...this.state.repoBranches, thisRepo]
+      //this.setState({repoBranches: newList})
+      if (this.state.repoBranches.length === 0) {
+        this.setState({repoBranches: '{"'+user+'": "'+jsonBranch[0]+'"'})
+      }
+      else {
+        this.setState({repoBranches: this.state.repoBranches+','+'"'+user+'": "'+jsonBranch[0]+'"'})
+      }
     }
 
     async componentDidMount() {
         cached = await ChffrPlus.readParam(Params.KEY_COMMUNITYPILOT_CONFIG);
+        currentrepo = await ChffrPlus.getCurrentSymLink();
+        response = await ChffrPlus.callCommunityPilotScript('currentbranch','');
+        jsonResponse = JSON.parse(response)
+        currentbranch = jsonResponse[0]
 
-        //this.setState({status: "loaded1: "+cached.toString()})
         let config = JSON.parse(cached) || [];
+        let branches = [];
+        // Get the currently loaded branch for each repo that's configured
+        try {
+          config.repos.map((item) => {
+            this.getRepoBranch(item.user)
+          })
+        } catch (error) {
+        }
+
+/*
+        try {
+          branches = this.state.repoBranches.split(',')
+          this.setState({branches: branches})
+        } catch (error) {
+          branches = []
+        }
+*/
+
         this.setState({
           repos: config.repos,
           isLoading: true,
           config: config,
-          status: "loaded2: "+cached
+          currentRepo: currentrepo,
+          currentBranch: currentbranch,
+          status: "loaded2: "+this.state.repoBranches
         })
 
         // Check to see if there's an update to the apk
-        config_url = config.config_url;
-
-        fetch(config_url)
+        fetch(config.config_url)
           .then((response) => response.json())
           .then((responseJson) => {
             updateAvailable = true;
@@ -75,9 +120,6 @@ class CommunityForks extends Component {
               newHash: responseJson.apk_hash,
               updateAvailable: updateAvailable,
             });
-
-             // Cache this data to storage
-            //ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(responseJson));
           })
           .catch((error) => {
             this.setState({
@@ -88,9 +130,9 @@ class CommunityForks extends Component {
           });
     }
 
-    handleNavigatedFromMenu(name, user, branch, route) {
-        const thisRepo = {name: name, user: user, branch: branch};
-        this.setState({ selectedRepo: thisRepo, name: name, user: user, branch: branch, route: route })
+    handleNavigatedFromMenu(user, route) {
+        const thisRepo = {user: user};
+        this.setState({ selectedRepo: thisRepo, user: user, route: route })
         this.refs.forkScrollView.scrollTo({ x: 0, y: 0, animated: false })
     }
 
@@ -101,7 +143,7 @@ class CommunityForks extends Component {
 
     addRepo() {
       const {config, repos} = this.state;
-      const newRepo = {name: this.state.name,user: this.state.user,branch: this.state.branch};
+      const newRepo = {name: this.state.name,user: this.state.user};
 
       try {
         newRepos = [...repos, newRepo];
@@ -111,7 +153,7 @@ class CommunityForks extends Component {
         ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_CONFIG,JSON.stringify(newConfig));
       }
       catch (error) {
-        //this.setState({repos: [newRepo], route: ForkRoutes.PRIMARY});
+        this.setState({status: 'error adding repo: '+eror.toString()});
       }
     }
 
@@ -119,9 +161,7 @@ class CommunityForks extends Component {
       const {selectedRepo, config, repos} = this.state;
 
       let newList = repos.filter(item =>
-          item.name != selectedRepo.name ||
-          item.user != selectedRepo.user ||
-          item.branch != selectedRepo.branch
+          item.user != selectedRepo.user
       );
 
       newConfig = config;
@@ -171,14 +211,6 @@ class CommunityForks extends Component {
                  onChangeText={(name) => this.setState({name: name})}
                  underlineColorAndroid="transparent"
                  />
-                <TextInput
-                 style={Styles.textInput}
-                 placeholder="Branch"
-                 placeholderTextColor="#444444"
-                 maxLength={60}
-                 onChangeText={(branch) => this.setState({branch})}
-                 underlineColorAndroid="transparent"
-                 />
                  <X.Button
                      size='small'
                      color='setupPrimary'
@@ -198,8 +230,8 @@ class CommunityForks extends Component {
               size='small'
               color='setupPrimary'
               style={Styles.Btn200}
-              onPress={ () => this.props.loadRepo(this.state.user,this.state.name,this.state.branch) }>
-              Load this repo
+              onPress={ () => this.props.loadRepo(this.state.user,this.state.selectedBranch) }>
+              Load this branch
           </X.Button>
         )
     }
@@ -208,7 +240,7 @@ class CommunityForks extends Component {
         return (
           <X.Button
               size='small'
-              color='setupPrimary'
+              color='deleteRepo'
               style={Styles.Btn200}
               onPress={ () => this.deleteRepo() }>
               DELETE this repo
@@ -216,15 +248,132 @@ class CommunityForks extends Component {
         )
     }
 
+    async checkForUpdate(user) {
+      response = await ChffrPlus.callCommunityPilotScript('repohasupdate', user);
+      responseJson = JSON.parse(response)
+      branches = await ChffrPlus.callCommunityPilotScript('getbranches', user);
+      branchesJson = JSON.parse(branches)
+      hasUpdate = responseJson[0]
+      repobranch = await ChffrPlus.callCommunityPilotScript('repobranch',user);
+      branchJson = JSON.parse(repobranch)
+      currentbranch = branchJson[0]
+
+      this.setState({hasUpdate: hasUpdate, branches: branchesJson, repoBranch: repobranch, selectedBranch: currentbranch})
+    }
+
+    async updateRepo() {
+      updated = false
+      this.setUpdateRepoModalVisible(true)
+      response = await ChffrPlus.callCommunityPilotScript('updaterepo', this.state.user);
+      try {
+        responseJson = JSON.parse(response)
+        response = JSON.parse(responseJson[responseJson.length-1])
+      }
+      catch (error) {
+        response = 'responseError: '+error.toString()
+      }
+
+      if (response.status ==='ok') {
+        updated = true
+      }
+
+      // Wait at least 5 seconds so they can see the modal message
+      setTimeout(()=> {
+        this.setState({repoUpdated: updated, updateRepoModalVisible: false})
+        this.checkForUpdate(this.state.user)
+      }, 5000)
+    }
+
+    setUpdateRepoModalVisible(visible) {
+      this.setState({updateRepoModalVisible: visible});
+    }
+
+    setBranch(branch) {
+      if (branch != '') {
+        this.setState({selectedBranch: branch})
+      }
+    }
+
+    renderUpdateRepoBtn() {
+      const {hasUpdate} = this.state;
+
+      if (hasUpdate.toString() === '1') {
+        return (
+          <X.Button
+            size='small'
+            color='updateAvailable'
+            style={Styles.Btn200}
+            onPress={ () => this.updateRepo() }>
+            Update Available
+          </X.Button>
+        )
+      }
+      else {
+        return null
+      }
+    }
+
+    renderBranchPicker() {
+      const {branches} = this.state;
+
+      const branchItems = branches.map((item) => {
+        //itemname = item.replace(/ /g,'').replace(/"/g,'').replace('[','').replace(']','')
+
+        return (
+          <Picker.Item label={item} value={item} />
+        )
+      })
+
+      return (
+        <View style={Styles.pulldownView}>
+          <Picker
+            selectedValue={this.state.selectedBranch}
+            mode='dropdown'
+            style={Styles.pulldownStyle}
+            onValueChange={(itemValue, itemIndex) =>
+              this.setBranch(itemValue)
+            }>
+            {branchItems}
+          </Picker>
+        </View>
+      )
+    }
+
     renderForkDetails() {
+      const {repoBranch, hasUpdate, repoUpdated, updateRepoModalVisible, branches, selectedBranch} = this.state;
+
+      let debug = null
+
+      if (DEBUG) {
+        debug = (
+          <X.Text color='white' weight='light' style={ Styles.forkDescription }>
+            repoBranch: {repoBranch} selectedBranch: {selectedBranch}
+          </X.Text>
+        )
+      }
+
       return (
         <X.Gradient color='dark_blue'>
           <View color='darkBlue' style={ Styles.viewContainer }>
+            <Modal
+              animationType="slide"
+              transparent={false}
+              visible={updateRepoModalVisible}
+              >
+              <View style={ Styles.modalStyle }>
+                <X.Text style={ Styles.forkDescription }>
+                  Updating repository openpilot.{this.state.user}...
+                </X.Text>
+                <X.Text style={ Styles.forkDescription }>
+                  One moment please.
+                </X.Text>
+              </View>
+            </Modal>
             <View style={ Styles.viewHeader }>
               <X.Button
                  color='ghost'
                  size='small'
-                 onPress={ () => this.handleNavigatedFromMenu(this.state.name, this.state.user, this.state.branch, ForkRoutes.PRIMARY) }>
+                 onPress={ () => this.handleNavigatedFromMenu(this.state.user, this.state.branch, ForkRoutes.PRIMARY) }>
                  {'<  Back'}
                </X.Button>
              </View>
@@ -239,14 +388,19 @@ class CommunityForks extends Component {
                    Repo: {this.state.name}
                  </X.Text>
                  <X.Text color='white' weight='light' style={ Styles.forkDescription }>
-                   Branch: {this.state.branch}
+                   Current Branch (tap to change):
                  </X.Text>
+                 {this.renderBranchPicker()}
+                 <View style={ Styles.installBtn }>
+                   {this.renderUpdateRepoBtn()}
+                 </View>
                  <View style={ Styles.installBtn }>
                    {this.renderLoadBtn()}
                  </View>
                  <View style={ Styles.installBtn }>
                    {this.renderDeleteBtn()}
                  </View>
+                 {debug}
                </View>
              </ScrollView>
            </View>
@@ -270,8 +424,13 @@ class CommunityForks extends Component {
       return
     }
 
+    forkPressed(user) {
+      this.checkForUpdate(user)
+      this.handleNavigatedFromMenu(user, ForkRoutes.FORKDETAILS)
+    }
+
     renderPrimaryScreen() {
-      const { isLoading, status, repos } = this.state;
+      const { isLoading, status, repos, currentRepo, currentBranch, repoBranches } = this.state;
 
       if (isLoading) {
         return (
@@ -288,24 +447,41 @@ class CommunityForks extends Component {
 
       if (DEBUG) {
         debug = (
-          <X.Text
-            color='white' weight='light'
-            style={ Styles.communityForkContext }>
-            Debug: {status}
-          </X.Text>
+            <X.Text
+              color='white' weight='light' size='tiny'
+              style={ Styles.communityForkContext }>
+              Debug: {repoBranches}
+            </X.Text>
         )
       }
 
       try {
-        contents = repos.map((item) =>{
+        contents = repos.map((item) => {
+          let branches = []
+          try {
+            branches = JSON.parse(this.state.repoBranches+'}')
+          }
+          catch (error) {
+          }
+
+          let branch = branches[item.user]
+          let btnColor = 'settingsDefault'
+          try {
+            if (this.state.currentRepo === 'openpilot.'+item.user && this.state.currentBranch === item.branch) {
+              btnColor = 'setupPrimary'
+            }
+          }
+          catch (error) {
+          }
+
           return (
             <View>
               <X.Button
                   size='small'
-                  color='settingsDefault'
+                  color={btnColor}
                   style={Styles.updateBtn}
-                  onPress={ () => this.handleNavigatedFromMenu(item.name, item.user, item.branch, ForkRoutes.FORKDETAILS) }>
-                  {item.user+" "+item.name+" ("+item.branch+")"}
+                  onPress={ () => this.forkPressed(item.user) }>
+                  {item.user+' ('+branch+')'}
               </X.Button>
               <X.Line color='transparent' size='tiny' spacing='mini' />
             </View>
@@ -321,7 +497,6 @@ class CommunityForks extends Component {
       catch (error) {
         this.setStatus({status: "updateBtn error: "+error.toString()})
       }
-
 
       const Bold = (props) => <X.Text color='white' weight='bold'>{props.children}</X.Text>
 
@@ -339,11 +514,20 @@ class CommunityForks extends Component {
               <ScrollView
                 ref="forkScrollView"
                 style={ Styles.viewWindow }>
-                <X.Text
-                  size='medium' color='white' weight='bold'
-                  style={ Styles.headline }>
-                  Welcome to CommunityPilot Forks
-                </X.Text>
+                <View style={Styles.topView}>
+                  <X.Text
+                    size='medium' color='white' weight='bold'
+                    style={ Styles.headline }>
+                    Welcome to CommunityPilot Forks
+                  </X.Text>
+                  <View style={Styles.versionView}>
+                    <X.Text
+                      color='white' weight='light' size='tiny'
+                      style={ Styles.communityForkContext }>
+                      {VERSION}
+                    </X.Text>
+                  </View>
+                </View>
                 <X.Text
                   color='white' weight='light'
                   style={ Styles.communityForkContext }>
@@ -429,10 +613,12 @@ const mapDispatchToProps = dispatch => ({
     openSettings: () => {
         dispatch(NavigationActions.navigate({ routeName: 'Settings' }));
     },
-    loadRepo: (username,reponame,branch) => {
-      ChffrPlus.loadCommunityPilotRepo(username,reponame,branch);
-      Alert.alert('Switching Repo', ' Your EON will reboot automatically.', [
-      ]);
+    loadRepo: (username,branch) => {
+      if (branch != '') {
+        ChffrPlus.loadCommunityPilotRepo(username,branch);
+        Alert.alert('Switching Repo', ' Your EON will reboot automatically.', [
+        ]);
+      }
     },
     doUpdate: () => {
       ChffrPlus.updateCommunityPilotAPK();
