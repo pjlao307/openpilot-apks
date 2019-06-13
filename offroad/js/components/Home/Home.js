@@ -10,11 +10,6 @@ import { NavigationActions } from 'react-navigation';
 // Native Modules
 import ChffrPlus from '../../native/ChffrPlus';
 
-// Utils
-import pluralize from '../../utils/pluralize';
-import { farenToCel } from '../../utils/conversions';
-import { formatSize } from '../../utils/bytes';
-
 // UI
 import { HOME_BUTTON_GRADIENT } from '../../styles/gradients';
 import X from '../../themes';
@@ -146,47 +141,6 @@ class Home extends Component {
         );
     }
 
-    renderUploadStatus() {
-        const {
-            uploadsPrettySizeOnDisk,
-        } = this.props;
-
-        if (uploadsPrettySizeOnDisk > 0) {
-            return (
-                <X.Text
-                    color='white'
-                    size='small'
-                    weight='light'>
-                    { uploadsPrettySizeOnDisk } to upload
-                </X.Text>
-            );
-        } else {
-            return null;
-        }
-    }
-
-    renderLoadStatus() {
-      const { status, hideStatus } = this.state;
-      if (!hideStatus) {
-        setTimeout(() => {
-            this.setState({hideStatus: true})
-        },5000)
-        return (
-          <View style={ Styles.homeActionsPrimaryButtonBody }>
-            <X.Text
-                color='white'
-                weight='semibold'>
-                { status }
-            </X.Text>
-          </View>
-        )
-      }
-      else {
-        return null
-      }
-      return null
-    }
-
     render() {
         const {
             isPaired,
@@ -217,9 +171,7 @@ class Home extends Component {
                                     { summaryCity }
                                 </X.Text>
                             </View>
-                            { this.renderUploadStatus() }
                         </View>
-                        { this.renderLoadStatus() }
                     </View>
                     <View style={ Styles.homeActions }>
                         <View style={ Styles.homeActionsPrimary }>
@@ -297,7 +249,6 @@ const mapStateToProps = (state) => {
         isPaired: state.host.device && state.host.device.is_paired,
         destination: state.driving.destination,
         isNavAvailable: state.host.isNavAvailable,
-        uploadsPrettySizeOnDisk: formatSize(state.host.thermal.unuploadedBytes),
         latitude: state.environment.latitude,
         longitude: state.environment.longitude,
         summaryCity: state.environment.city,

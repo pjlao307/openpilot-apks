@@ -2,6 +2,7 @@ import ChffrPlus from '../../native/ChffrPlus';
 import { Params } from '../../config';
 
 export const ACTION_PARAM_CHANGED = 'ACTION_PARAM_CHANGED';
+export const ACTION_PARAM_DELETED = 'ACTION_PARAM_DELETED';
 
 const PARAMS = [
   "AccessToken",
@@ -31,6 +32,7 @@ const PARAMS = [
   "APKLoaded",
   "APKReverted",
   "LastBootedRepo",
+  "CommunityPilotUser",
 ];
 
 export function refreshParams() {
@@ -48,6 +50,15 @@ export function updateParam(param, value) {
     dispatch({ type: ACTION_PARAM_CHANGED, payload: { param, value }});
     setTimeout(() => {
       ChffrPlus.writeParam(param, value);
+    }, 0);
+  }
+}
+
+export function deleteParam(param) {
+  return function(dispatch) {
+    dispatch({ type: ACTION_PARAM_DELETED, payload: { param }});
+    setTimeout(function() {
+      ChffrPlus.deleteParam(param);
     }, 0);
   }
 }

@@ -1417,7 +1417,7 @@ combined-stream@1.0.6, combined-stream@^1.0.5, combined-stream@~1.0.5:
 
 "comma-api@git+https://git@github.com/commaai/comma-api.git":
   version "1.0.0"
-  resolved "git+https://git@github.com/commaai/comma-api.git#c34ca06af199185f92064c14fb7690d4d16f38eb"
+  resolved "git+https://git@github.com/commaai/comma-api.git#6ef1710ecfad58fff5a22ee00ca174f8cd9c32ca"
   dependencies:
     config-request "^0.5.1"
     querystringify "^2.1.1"

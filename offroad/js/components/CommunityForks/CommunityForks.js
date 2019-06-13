@@ -22,13 +22,18 @@ import X from '../../themes';
 import Styles from './CommunityForksStyle';
 import { Params } from '../../config';
 
-const VERSION = 'v0.1.0';
+const VERSION = 'v0.1.1';
 const DEBUG = false;
+
+const Icons = {
+    user: require('../../img/icon_user.png'),
+}
 
 const ForkRoutes = {
     PRIMARY: 'PRIMARY',
     FORKDETAILS: 'DETAILS',
     ADD_REPO_MODAL: 'ADD_REPO_MODAL',
+    ACCOUNT: 'ACCOUNT',
 }
 
 class CommunityForks extends Component {
@@ -54,15 +59,14 @@ class CommunityForks extends Component {
           branches: [],
           selectedBranch: '',
           repoBranches: '',
+          accountSet: false,
         }
     }
 
     async getRepoBranch(user) {
       branch = await ChffrPlus.callCommunityPilotScript('repobranch',user);
       jsonBranch = JSON.parse(branch)
-      //thisRepo = JSON.parse('{"'+user+'": "'+jsonBranch[0]+'"}')
-      //newList = [...this.state.repoBranches, thisRepo]
-      //this.setState({repoBranches: newList})
+
       if (this.state.repoBranches.length === 0) {
         this.setState({repoBranches: '{"'+user+'": "'+jsonBranch[0]+'"'})
       }
@@ -77,6 +81,14 @@ class CommunityForks extends Component {
         response = await ChffrPlus.callCommunityPilotScript('currentbranch','');
         jsonResponse = JSON.parse(response)
         currentbranch = jsonResponse[0]
+        userAccount = await ChffrPlus.readParam(Params.KEY_COMMUNITYPILOT_USER);
+
+        try {
+          jsonUserAccount = JSON.parse(userAccount)
+          this.setState({discordUser: jsonUserAccount.username, email: jsonUserAccount.email, accountSet: true})
+        }
+        catch (error) {
+        }
 
         let config = JSON.parse(cached) || [];
         let branches = [];
@@ -87,15 +99,6 @@ class CommunityForks extends Component {
           })
         } catch (error) {
         }
-
-/*
-        try {
-          branches = this.state.repoBranches.split(',')
-          this.setState({branches: branches})
-        } catch (error) {
-          branches = []
-        }
-*/
 
         this.setState({
           repos: config.repos,
@@ -294,6 +297,12 @@ class CommunityForks extends Component {
       }
     }
 
+    setUserAccount() {
+      content = '{"username":"'+this.state.discordUser+'", "email": "'+this.state.email+'"}'
+      ChffrPlus.writeParam(Params.KEY_COMMUNITYPILOT_USER,content);
+      this.setState({accountSet: true, route: ForkRoutes.PRIMARY});
+    }
+
     renderUpdateRepoBtn() {
       const {hasUpdate} = this.state;
 
@@ -317,8 +326,6 @@ class CommunityForks extends Component {
       const {branches} = this.state;
 
       const branchItems = branches.map((item) => {
-        //itemname = item.replace(/ /g,'').replace(/"/g,'').replace('[','').replace(']','')
-
         return (
           <Picker.Item label={item} value={item} />
         )
@@ -373,7 +380,7 @@ class CommunityForks extends Component {
               <X.Button
                  color='ghost'
                  size='small'
-                 onPress={ () => this.handleNavigatedFromMenu(this.state.user, this.state.branch, ForkRoutes.PRIMARY) }>
+                 onPress={ () => this.handleNavigatedFromMenu(this.state.user, ForkRoutes.PRIMARY) }>
                  {'<  Back'}
                </X.Button>
              </View>
@@ -429,14 +436,105 @@ class CommunityForks extends Component {
       this.handleNavigatedFromMenu(user, ForkRoutes.FORKDETAILS)
     }
 
-    renderPrimaryScreen() {
-      const { isLoading, status, repos, currentRepo, currentBranch, repoBranches } = this.state;
+    renderAccountScreen() {
+      const {discordUser, email} = this.state;
 
-      if (isLoading) {
+      let debug = null
+
+      if (DEBUG) {
+        debug = (
+          <X.Text color='white' weight='light' style={ Styles.forkDescription }>
+            Debug: {'discordUser: '+discordUser+' email: '+email}
+          </X.Text>
+        )
+      }
+
+      return (
+        <X.Gradient color='dark_blue'>
+          <View color='darkBlue' style={ Styles.viewContainer }>
+            <View style={ Styles.viewHeader }>
+              <X.Button
+                 color='ghost'
+                 size='small'
+                 onPress={ () => this.handleNavigatedFromMenu(this.state.user, ForkRoutes.PRIMARY) }>
+                 {'<  Back'}
+               </X.Button>
+             </View>
+             <ScrollView
+               ref="forkScrollView"
+               style={ Styles.viewWindow }>
+               <View>
+                 <TextInput
+                  style={Styles.textInput}
+                  placeholder="Discord Username"
+                  placeholderTextColor="#444444"
+                  value={this.state.discordUser}
+                  maxLength={60}
+                  onChangeText={(discordUser) => this.setState({discordUser})}
+                  underlineColorAndroid="transparent"
+                  />
+                  <TextInput
+                   value={this.state.email}
+                   style={[Styles.textInput,{width: 300}]}
+                   placeholder="Email"
+                   textContentType="emailAddress"
+                   placeholderTextColor="#444444"
+                   maxLength={200}
+                   onChangeText={(email) => this.setState({email})}
+                   underlineColorAndroid="transparent"
+                   />
+                   <X.Button
+                       size='small'
+                       color='setupPrimary'
+                       style={{width: 200, marginTop: 10, marginLeft: 15}}
+                       onPress={ () => this.setUserAccount() }>
+                       Set Account
+                   </X.Button>
+                 {debug}
+               </View>
+             </ScrollView>
+          </View>
+        </X.Gradient>
+      )
+    }
+
+    renderAccountStatus() {
+      return (
+        <View key={ 1 } style={ Styles.settingsMenuItem }>
+            <X.Button
+                color='transparent'
+                size='full'
+                style={ Styles.settingsMenuItemButton }
+                onPress={ () => this.handleNavigatedFromMenu(this.state.user, ForkRoutes.ACCOUNT) }>
+                <X.Image
+                    source={ Icons.user }
+                    style={ Styles.settingsMenuItemIcon } />
+                <X.Text
+                    color='white'
+                    size='small'
+                    weight='semibold'
+                    style={ Styles.settingsMenuItemTitle }>
+                    CP Account
+                </X.Text>
+                <X.Text
+                    color='white'
+                    size='tiny'
+                    weight='light'
+                    style={ Styles.settingsMenuItemContext }>
+                    { this.state.accountSet ? 'Set' : 'Not Set' }
+                </X.Text>
+            </X.Button>
+        </View>
+      )
+    }
+    renderPrimaryScreen() {
+      const { discordUser, email, isLoading, status, repos, currentRepo, currentBranch, repoBranches } = this.state;
+
+      /*if (isLoading) {
         return (
           <ActivityIndicator size="large" color="#0000ff" animating={isLoading} />
         );
-      }
+      }*/
 
       let debug = (
         <X.Text
@@ -450,7 +548,7 @@ class CommunityForks extends Component {
             <X.Text
               color='white' weight='light' size='tiny'
               style={ Styles.communityForkContext }>
-              Debug: {repoBranches}
+              Debug: {'user: '+discordUser+' email: '+email}
             </X.Text>
         )
       }
@@ -515,17 +613,20 @@ class CommunityForks extends Component {
                 ref="forkScrollView"
                 style={ Styles.viewWindow }>
                 <View style={Styles.topView}>
-                  <X.Text
-                    size='medium' color='white' weight='bold'
-                    style={ Styles.headline }>
-                    Welcome to CommunityPilot Forks
-                  </X.Text>
-                  <View style={Styles.versionView}>
+                  {this.renderAccountStatus()}
+                  <View style={{flex: 1, flexDirection: 'column'}}>
                     <X.Text
-                      color='white' weight='light' size='tiny'
-                      style={ Styles.communityForkContext }>
-                      {VERSION}
+                      size='medium' color='white' weight='bold'
+                      style={ Styles.headline }>
+                      Welcome to CommunityPilot Forks
                     </X.Text>
+                    <View style={Styles.versionView}>
+                      <X.Text
+                        color='white' weight='light' size='tiny'
+                        style={ Styles.communityForkContext }>
+                        {VERSION}
+                      </X.Text>
+                    </View>
                   </View>
                 </View>
                 <X.Text
@@ -592,6 +693,8 @@ class CommunityForks extends Component {
                 return this.renderForkDetails();
             case ForkRoutes.ADD_REPO_MODAL:
                 return this.renderAddRepo();
+            case ForkRoutes.ACCOUNT:
+                return this.renderAccountScreen();
             default:
               return this.renderPrimaryScreen();
         }
