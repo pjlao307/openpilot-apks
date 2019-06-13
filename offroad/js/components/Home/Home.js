@@ -146,47 +146,6 @@ class Home extends Component {
         );
     }
 
-    renderUploadStatus() {
-        const {
-            uploadsPrettySizeOnDisk,
-        } = this.props;
-
-        if (uploadsPrettySizeOnDisk > 0) {
-            return (
-                <X.Text
-                    color='white'
-                    size='small'
-                    weight='light'>
-                    { uploadsPrettySizeOnDisk } to upload
-                </X.Text>
-            );
-        } else {
-            return null;
-        }
-    }
-
-    renderLoadStatus() {
-      const { status, hideStatus } = this.state;
-      if (!hideStatus) {
-        setTimeout(() => {
-            this.setState({hideStatus: true})
-        },5000)
-        return (
-          <View style={ Styles.homeActionsPrimaryButtonBody }>
-            <X.Text
-                color='white'
-                weight='semibold'>
-                { status }
-            </X.Text>
-          </View>
-        )
-      }
-      else {
-        return null
-      }
-      return null
-    }
-
     render() {
         const {
             isPaired,
@@ -217,9 +176,7 @@ class Home extends Component {
                                     { summaryCity }
                                 </X.Text>
                             </View>
-                            { this.renderUploadStatus() }
                         </View>
-                        { this.renderLoadStatus() }
                     </View>
                     <View style={ Styles.homeActions }>
                         <View style={ Styles.homeActionsPrimary }>
