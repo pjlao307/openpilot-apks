@@ -27,7 +27,6 @@ export const StackNavigator = RNStackNavigator({
     GiraffeSwitch: { screen: GiraffeSwitch },
     Settings: { screen: Settings },
     SettingsStandalone: { screen: Settings },
-    Setup: { screen: Setup },
     UpdatePrompt: { screen: UpdatePrompt },
     CommunityForks: { screen: CommunityForks },
 });

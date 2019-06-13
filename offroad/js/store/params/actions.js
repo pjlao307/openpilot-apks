@@ -2,6 +2,7 @@ import ChffrPlus from '../../native/ChffrPlus';
 import { Params } from '../../config';
 
 export const ACTION_PARAM_CHANGED = 'ACTION_PARAM_CHANGED';
+export const ACTION_PARAM_DELETED = 'ACTION_PARAM_DELETED';
 
 const PARAMS = [
   "AccessToken",
