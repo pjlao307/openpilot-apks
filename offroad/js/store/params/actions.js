@@ -51,3 +51,12 @@ export function updateParam(param, value) {
     }, 0);
   }
 }
+
+export function deleteParam(param) {
+  return function(dispatch) {
+    dispatch({ type: ACTION_PARAM_DELETED, payload: { param }});
+    setTimeout(function() {
+      ChffrPlus.deleteParam(param);
+    }, 0);
+  }
+}
