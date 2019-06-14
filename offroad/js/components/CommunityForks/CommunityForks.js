@@ -565,7 +565,7 @@ class CommunityForks extends Component {
           let branch = branches[item.user]
           let btnColor = 'settingsDefault'
           try {
-            if (this.state.currentRepo === 'openpilot.'+item.user && this.state.currentBranch === item.branch) {
+            if (this.state.currentRepo === 'openpilot.'+item.user) {
               btnColor = 'setupPrimary'
             }
           }
