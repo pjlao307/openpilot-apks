@@ -311,7 +311,7 @@ class CommunityForks extends Component {
           <X.Button
             size='small'
             color='updateAvailable'
-            style={Styles.Btn200}
+            style={[Styles.Btn200, {marginTop: 20}]}
             onPress={ () => this.updateRepo() }>
             Update Available
           </X.Button>
@@ -653,7 +653,8 @@ class CommunityForks extends Component {
                 <X.Text
                   color='white' weight='light'
                   style={ Styles.communityForkContext }>
-                  <Bold>Step 4:</Bold> Tap "Load this repo" button to switch to that fork.
+                  <Bold>Step 4:</Bold> Select the branch from the pulldown list and tap the "Load this branch"
+                  button to switch to the selected fork and branch.
                 </X.Text>
                 <X.Text
                   color='white' weight='light'
