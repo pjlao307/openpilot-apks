@@ -16,10 +16,23 @@ import X from '../../themes';
 import Styles from './HomeStyles';
 import PrimaryButton from '../PrimaryButton';
 
+import { Params } from '../../config';
+
 class Home extends Component {
     static navigationOptions = {
       header: null,
     };
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+          status: '',
+          lastrepo: '',
+          lastloaded: '0',
+          hideStatus: true,
+        }
+    }
 
     handlePressedStartDrive = () => {
         this.props.onNewDrivePressed();
@@ -28,6 +41,19 @@ class Home extends Component {
     handlePressedSettings = () => {
         ChffrPlus.sendBroadcast("ai.comma.plus.offroad.NAVIGATED_TO_SETTINGS");
         this.props.openSettings();
+    }
+
+    async componentDidMount() {
+      lastloaded = await ChffrPlus.readParam(Params.KEY_APK_LOADED);
+      reverted = await ChffrPlus.readParam(Params.KEY_APK_REVERTED);
+      ChffrPlus.writeParam(Params.KEY_APK_LOADED,'1');
+      lastrepo = await ChffrPlus.getCurrentSymLink();
+      ChffrPlus.writeParam(Params.KEY_LAST_BOOTED_REPO,lastrepo);
+      if (reverted.toString().trim() === '1') {
+        status = 'NOTE: Boot failed, using last successful repository: '+lastrepo
+        this.setState({status: status, hideStatus: false})
+      }
+      this.setState({lastrepo: lastrepo})
     }
 
     renderNewDestination() {

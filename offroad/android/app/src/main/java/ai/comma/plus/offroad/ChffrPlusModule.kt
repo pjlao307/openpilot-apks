@@ -21,7 +21,9 @@ import android.net.wifi.WifiInfo
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.File
 
 /**
  * Created by batman on 11/2/17.
@@ -237,6 +239,16 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun showAndroidSettings() {
+        try {
+            Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "am start -n com.android.settings/.Settings"))
+        } catch (e: IOException) {
+            CloudLog.exception("BaseUIReactModule.androidSettings", e)
+        }
+
+    }
+
+    @ReactMethod
     fun shutdown() {
         try {
             Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "service call power 17 i32 0 i32 1"))
@@ -349,6 +361,70 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                     .emit(SIM_STATE_EVENT_NAME, cellState)
         }
+    }
+
+    @ReactMethod
+    fun loadCommunityPilotRepo(user: String, branch: String) {
+      try {
+         Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+          "sh /data/communitypilot_scripts/switchRepo.sh switch ${user} ${branch} >> /data/communitypilot_scripts/cp.log"))
+       } catch (e: IOException) {
+       }
+    }
+
+    @ReactMethod
+    fun updateCommunityPilotAPK() {
+       try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh update >> /data/communitypilot_scripts/cp.log"))
+          proc.waitFor()
+        } catch (e: IOException) {
+        }
+    }
+
+    fun callCommunityPilotScriptCmd(cmd: String, username: String): String? {
+       try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh ${cmd} ${username}"))
+          //proc.waitFor()
+          var reader = BufferedReader(InputStreamReader(proc.getInputStream()))
+          var line = reader.readLine()
+          var response = ArrayList<String>()
+          response.add("\""+line+"\"")
+          while (line != null) {
+            line = reader.readLine()
+            if (line != null) {
+              response.add("\""+line+"\"")
+            }
+          }
+          reader.close()
+          return response.toString()
+        } catch (e: IOException) {
+          return e.toString()
+        }
+    }
+
+    @ReactMethod
+    fun callCommunityPilotScript(cmd: String, username: String, promise: Promise) {
+        promise.resolve(callCommunityPilotScriptCmd(cmd, username))
+    }
+
+    fun getCurrentSymLinkCmd(): String? {
+        try {
+          var proc = Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c",
+            "sh /data/communitypilot_scripts/switchRepo.sh currentrepo"))
+          proc.waitFor()
+          var reader = BufferedReader(InputStreamReader(proc.getInputStream()))
+          var line = reader.readLine()
+          return line.toString()
+        } catch(e: Exception) {
+            return null
+        }
+    }
+
+    @ReactMethod
+    fun getCurrentSymLink(promise: Promise) {
+        promise.resolve(getCurrentSymLinkCmd())
     }
 
     internal inner class NetworkMonitor : BroadcastReceiver() {

@@ -28,6 +28,11 @@ const PARAMS = [
   "SpeedLimitOffset",
   "TrainingVersion",
   "Version",
+  "CommunityPilotConfig",
+  "APKLoaded",
+  "APKReverted",
+  "LastBootedRepo",
+  "CommunityPilotUser",
 ];
 
 export function refreshParams() {

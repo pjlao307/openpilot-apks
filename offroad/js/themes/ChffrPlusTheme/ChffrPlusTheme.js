@@ -50,6 +50,16 @@ export let ChffrPlusTheme = {
                 borderColor: 'transparent',
                 borderRadius: 13,
             },
+            updateAvailable: {
+                backgroundColor: '#38b535',
+                borderColor: Colors.blue100,
+                borderRadius: 13,
+            },
+            deleteRepo: {
+                backgroundColor: '#de3535',
+                borderColor: Colors.blue100,
+                borderRadius: 13,
+            },
         },
     },
     radioField: {

@@ -16,6 +16,7 @@ import SetupWelcome from '../components/SetupWelcome';
 import Onboarding from '../components/training/Onboarding';
 import GiraffeSwitch from '../components/training/GiraffeSwitch'
 import UpdatePrompt from '../components/UpdatePrompt';
+import CommunityForks from '../components/CommunityForks';
 
 export const StackNavigator = RNStackNavigator({
     Home: { screen: Home },
@@ -27,6 +28,7 @@ export const StackNavigator = RNStackNavigator({
     Settings: { screen: Settings },
     SettingsStandalone: { screen: Settings },
     UpdatePrompt: { screen: UpdatePrompt },
+    CommunityForks: { screen: CommunityForks },
 });
 
 
